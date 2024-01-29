@@ -17,5 +17,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
+  ratesWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    rowGap: 10,
+    columnGap: 5,
+  },
+  rateButton: (selected: any) => ({
+    backgroundColor: selected ? '#1f2937' : 'grey',
+    padding: 8,
+    borderRadius: 20,
+  }),
+  rateText: {color: '#fff', fontSize: 14},
 });
 export default styles;
