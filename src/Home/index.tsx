@@ -1,23 +1,45 @@
 import * as React from 'react';
-import {Text, TouchableOpacity, SafeAreaView, Alert, View} from 'react-native';
+import {
+  Text,
+  TouchableOpacity,
+  SafeAreaView,
+  Alert,
+  View,
+  Dimensions,
+} from 'react-native';
 import styles from './style';
 import axios from 'axios';
 import RBSheet from '@lunalee/react-native-raw-bottom-sheet';
 import ListItems from '../Components/ListItems';
-const exchangeRates = [
-  {title: '1 Day', value: 1},
-  {title: '1 Month', value: 30},
-  {title: '3 Months', value: 90},
-  {title: '6 Months', value: 180},
-  {title: '1 Year', value: 360},
-];
+import {exchangeRates} from '../utils/constants';
+import {calculateDates} from '../utils/helperFunctions';
+import {LineChart} from 'react-native-chart-kit';
+
 const Home = () => {
   const [countries, setCountries] = React.useState<any>([]);
   const [selectedCountry, setSelectedCountry] = React.useState<any>({});
   const [selectedCurrency, setSelectedCurrency] = React.useState<any>({});
-  const [selectedRate, setSelectedRate] = React.useState(1);
+  const [selectedRate, setSelectedRate] = React.useState(7);
   const countriesRef = React.useRef<RBSheet>();
   const currencyRef = React.useRef<RBSheet>();
+  const fetchRateData = (days: any) => {
+    const params = calculateDates(days);
+    axios
+      .get('https://api.fastforex.io/time-series', {
+        params: {
+          api_key: '4709791196-0d6dc1acbd-s81mj8',
+          from: 'EGP',
+          to: 'USD',
+          ...params,
+        },
+      })
+      .then(res => {
+        console.log(res.data);
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
   const onSelectCountry = (item: any) => {
     setSelectedCountry(item);
     countriesRef.current?.close();
@@ -71,15 +93,60 @@ const Home = () => {
         {exchangeRates.map(item => {
           return (
             <TouchableOpacity
+              key={item.value}
               style={[styles.rateButton(item.value === selectedRate)]}
               onPress={() => {
                 setSelectedRate(item.value);
+                fetchRateData(item.value);
               }}>
               <Text style={styles.rateText}>{item.title}</Text>
             </TouchableOpacity>
           );
         })}
       </View>
+      <LineChart
+        data={{
+          labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+          datasets: [
+            {
+              data: [
+                Math.random() * 100,
+                Math.random() * 100,
+                Math.random() * 100,
+                Math.random() * 100,
+                Math.random() * 100,
+                Math.random() * 100,
+              ],
+            },
+          ],
+        }}
+        width={Dimensions.get('window').width - 40} // from react-native
+        height={220}
+        yAxisLabel="$"
+        yAxisSuffix="k"
+        yAxisInterval={1} // optional, defaults to 1
+        chartConfig={{
+          backgroundColor: '#e26a00',
+          backgroundGradientFrom: '#fb8c00',
+          backgroundGradientTo: '#ffa726',
+          decimalPlaces: 2, // optional, defaults to 2dp
+          color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+          labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+          style: {
+            borderRadius: 16,
+          },
+          propsForDots: {
+            r: '6',
+            strokeWidth: '2',
+            stroke: '#ffa726',
+          },
+        }}
+        bezier
+        style={{
+          marginVertical: 8,
+          borderRadius: 16,
+        }}
+      />
       <RBSheet
         ref={countriesRef}
         height={400}
